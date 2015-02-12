@@ -1,0 +1,21 @@
+[Unit]
+Description=newrelic-sysmond
+Documentation=man:systemd-nspawn(1)
+
+[Service]
+ExecStartPre=/usr/bin/rm -rf /var/lib/container/newrelic-sysmond
+ExecStartPre=/usr/bin/mkdir -p /var/lib/container/newrelic-sysmond
+ExecStartPre=/bin/sh -c 'docker rm -f newrelic-sysmond ;  docker create --name newrelic-sysmond johanneswuerbach/newrelic-sysmond'
+ExecStartPre=/bin/sh -c 'docker export  newrelic-sysmond  > /var/lib/container/newrelic-sysmond/image.tar'
+ExecStartPre=/bin/sh -c 'cd /var/lib/container/newrelic-sysmond/ && tar -xf image.tar'
+ExecStart=/usr/bin/systemd-nspawn --quiet --keep-unit --share-system --bind=/dev:/dev --bind=/sys:/sys --bind=/proc:/proc --capability=all --directory=/var/lib/container/newrelic-sysmond --machine=newrelic-sysmond  /bin/sh -c 'nrsysmond-config --set license_key=NEW_RELIC_LICENSE_KEY && nrsysmond -c /etc/nrsysmond.cfg -n %H -d info -l /dev/stdout -f'
+KillMode=mixed
+Type=notify
+RestartForceExitStatus=133
+SuccessExitStatus=133
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true
