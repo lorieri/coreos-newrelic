@@ -11,8 +11,8 @@ ExecStartPre=/bin/sh -c 'cd /var/lib/container/newrelic-sysmond/ && tar -xf imag
 ExecStart=/usr/bin/systemd-nspawn --quiet --keep-unit --share-system --bind=/dev:/dev --bind=/sys:/sys --bind=/proc:/proc --capability=all --directory=/var/lib/container/newrelic-sysmond --machine=newrelic-sysmond  /bin/sh -c 'nrsysmond-config --set license_key=NEW_RELIC_LICENSE_KEY && nrsysmond -c /etc/nrsysmond.cfg -n %H -d info -l /dev/stdout -f'
 KillMode=mixed
 Type=notify
-RestartForceExitStatus=133
-SuccessExitStatus=133
+RestartForceExitStatus=1 3 3
+SuccessExitStatus=1 3 3
 
 [Install]
 WantedBy=multi-user.target
