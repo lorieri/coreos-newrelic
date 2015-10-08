@@ -1,16 +1,17 @@
 [Unit]
 Description=newrelic-sysmond
-Documentation=man:systemd-nspawn(1)
 
 [Service]
-ExecStartPre=/usr/bin/rm -rf /var/lib/container/newrelic-sysmond
-ExecStartPre=/usr/bin/mkdir -p /var/lib/container/newrelic-sysmond
-ExecStartPre=/bin/sh -c 'docker rm -f newrelic-sysmond ;  docker create --name newrelic-sysmond johanneswuerbach/newrelic-sysmond'
-ExecStartPre=/bin/sh -c 'docker export  newrelic-sysmond  > /var/lib/container/newrelic-sysmond/image.tar'
-ExecStartPre=/bin/sh -c 'cd /var/lib/container/newrelic-sysmond/ && tar -xf image.tar'
-ExecStart=/usr/bin/systemd-nspawn --quiet --keep-unit --share-system --bind=/dev:/dev --bind=/sys:/sys --bind=/proc:/proc --capability=all --directory=/var/lib/container/newrelic-sysmond --machine=newrelic-sysmond  /bin/sh -c 'nrsysmond-config --set license_key=NEW_RELIC_LICENSE_KEY && nrsysmond -c /etc/nrsysmond.cfg -n %H -d info -l /dev/stdout -f'
+PIDFile=/run/newrelic-sysmond.pid
+ExecStartPre=/usr/bin/rm -rf /run/newrelic-sysmond
+ExecStartPre=/usr/bin/mkdir -p /run/newrelic-sysmond
+ExecStartPre=/bin/sh -c 'docker rm -f newrelic-sysmond ;  docker create --name newrelic-sysmond newrelic/nrsysmond:latest'
+ExecStartPre=/bin/sh -c 'docker export  newrelic-sysmond  > /run/newrelic-sysmond/image.tar'
+ExecStartPre=/bin/sh -c 'cd /run/newrelic-sysmond/ && tar -xf image.tar'
+ExecStart=/bin/sh -c 'NRSYSMOND_loglevel=info NRSYSMOND_license_key=NEW_RELIC_LICENSE_KEY NRSYSMOND_hostname=%H /run/newrelic-sysmond/usr/sbin/nrsysmond -E -p /run/newrelic-sysmond.pid -l /dev/null'
+
 KillMode=mixed
-Type=notify
+Type=forking
 RestartForceExitStatus=1 3 3
 SuccessExitStatus=1 3 3
 
